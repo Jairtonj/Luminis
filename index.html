@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LUMINIS">
+<meta name="application-name" content="LUMINIS">
+<meta name="theme-color" content="#0f0d09">
+<meta name="description" content="Cadastre, importe e crie imagens com seus pensamentos para postar nas redes sociais.">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<title>LUMINIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Merriweather:ital,wght@0,300;0,400;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;600&family=Raleway:ital,wght@0,300;0,400;0,600;1,300&family=Josefin+Sans:ital,wght@0,300;0,400;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Nunito:ital,wght@0,300;0,400;1,300&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<style>
+:root {
+  --bg:#0f0d09; --bg2:#1a1208; --bg3:#130f08; --bg4:#221a0a;
+  --border:#2a2010; --border2:#3a2e1a;
+  --gold:#c9a96e; --gold2:#e8c87a;
+  --text:#e8d5b7; --text2:#c8b890;
+  --muted:#7a6a4a; --muted2:#5a4a2a;
+  --danger:#c97070; --success:#6ab87a; --info:#6ab0c9; --warn:#c9a040;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:18px}
+.loader-logo{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);letter-spacing:.15em}
+.loader-bar{width:200px;height:3px;background:var(--border2);border-radius:2px;overflow:hidden}
+.loader-fill{height:100%;background:var(--gold);border-radius:2px;animation:loadanim 1.5s ease-in-out infinite}
+.loader-text{font-size:12px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase}
+@keyframes loadanim{0%{width:0;margin-left:0}50%{width:100%;margin-left:0}100%{width:0;margin-left:100%}}
+
+/* HEADER */
+.header{background:var(--bg2);border-bottom:1px solid var(--border2);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--gold);letter-spacing:.1em}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-top:1px}
+.hright{display:flex;gap:8px;align-items:center}
+.db-pill{font-size:11px;padding:3px 9px;border-radius:20px;background:#0f1e0f;color:var(--success);border:1px solid #2a4a2a;white-space:nowrap}
+.hcount{font-size:12px;color:var(--muted)}
+
+/* TABS */
+.tabs{background:var(--bg3);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;padding:7px 10px;gap:5px;position:sticky;top:63px;z-index:99}
+.tabs::-webkit-scrollbar{display:none}
+.tb{white-space:nowrap;padding:8px 13px;border-radius:8px;border:none;cursor:pointer;font-family:'Lato',sans-serif;font-size:13px;transition:all .2s;background:transparent;color:var(--gold);flex-shrink:0}
+.tb.active{background:var(--gold);color:var(--bg);font-weight:700}
+
+/* CONTENT */
+.content{padding:16px;max-width:700px;margin:0 auto}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:11px;transition:all .2s;position:relative}
+.card:active{opacity:.85;transform:scale(.99)}
+.card.selected{border-color:var(--gold);background:var(--bg4)}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;gap:8px}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--gold);flex:1;cursor:pointer}
+.card-actions{display:flex;gap:4px;flex-shrink:0}
+.icon-btn{background:none;border:none;cursor:pointer;padding:3px 5px;font-size:16px;opacity:.6;transition:opacity .2s;border-radius:6px}
+.icon-btn:active{opacity:1;background:var(--border)}
+.card-text{font-size:14px;line-height:1.75;color:var(--text2);margin-bottom:11px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-style:italic;cursor:pointer}
+.card-foot{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.badge{font-size:11px;background:#2a2010;color:var(--gold);padding:3px 9px;border-radius:20px}
+.tag{font-size:11px;color:var(--muted)}
+.cdate{margin-left:auto;font-size:11px;color:var(--muted2)}
+.status-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.schip{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid}
+.chip-posted{color:var(--success);border-color:#2a4a2a;background:#0a180a}
+.chip-sched{color:var(--info);border-color:#1a2a3a;background:#060f18}
+.chip-pending{color:var(--muted);border-color:var(--border);background:transparent}
+
+/* FORMS */
+.fg{margin-bottom:15px}
+label{display:block;font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+input,textarea,select{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Lato',sans-serif;font-size:15px;outline:none;appearance:none;-webkit-appearance:none;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{resize:vertical;line-height:1.8;min-height:100px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%23c9a96e' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+input[type="date"]{color-scheme:dark}
+
+/* BUTTONS */
+.bp{background:var(--gold);color:var(--bg);border:none;border-radius:10px;padding:13px 18px;cursor:pointer;font-family:'Lato',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;width:100%;transition:all .2s}
+.bp:active{opacity:.85;transform:scale(.98)}
+.bp:disabled{opacity:.45}
+.bs{background:var(--bg2);color:var(--gold);border:1px solid var(--border2);border-radius:10px;padding:10px 15px;cursor:pointer;font-family:'Lato',sans-serif;font-size:14px;transition:all .2s}
+.bs:active{opacity:.8}
+.bs.danger{color:var(--danger);border-color:#3a1a1a}
+.bs.success{color:var(--success);border-color:#1a3a1a}
+.bs.info{color:var(--info);border-color:#1a2a3a}
+.brow{display:flex;gap:8px;flex-wrap:wrap}
+.brow .bs{flex:1;text-align:center}
+
+/* SEARCH */
+.sbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sbar input{flex:1;min-width:130px}
+.sbar select{width:auto;min-width:100px}
+
+.stitle{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--gold);margin-bottom:18px;font-weight:600}
+.empty{text-align:center;padding:48px 20px;color:var(--muted2)}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty p{font-size:14px;line-height:1.7}
+
+/* SWATCHES */
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+.swatch{height:44px;border-radius:10px;border:2px solid transparent;cursor:pointer;font-size:10px;font-family:'Lato',sans-serif;transition:border-color .2s;display:flex;align-items:center;justify-content:center}
+.swatch.active{border-color:var(--gold)}
+
+/* FORMAT */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:4px}
+.fbtn{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:left;transition:all .2s}
+.fbtn.active{background:var(--bg4);border-color:var(--gold)}
+.fbtn-label{font-size:13px;color:var(--gold);font-family:'Lato',sans-serif;margin-bottom:2px}
+.fbtn-size{font-size:11px;color:var(--muted)}
+
+/* FONT PICKER */
+.font-section-label{font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:block}
+.font-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:4px;max-height:200px;overflow-y:auto;padding-right:2px}
+.font-grid::-webkit-scrollbar{width:3px}
+.font-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.fontbtn{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;transition:all .2s;display:flex;flex-direction:column;gap:2px}
+.fontbtn.active{background:var(--bg4);border-color:var(--gold)}
+.fontbtn-name{font-size:11px;color:var(--muted);letter-spacing:.04em}
+.fontbtn-sample{font-size:16px;color:var(--text);line-height:1.3}
+
+/* PREVIEW */
+.pbox{background:var(--bg2);border-radius:14px;padding:16px;text-align:center;min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pbox img{max-width:100%;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.6);margin-bottom:14px}
+.pph{color:var(--muted2)}
+.pph .icon{font-size:36px;margin-bottom:9px}
+
+/* NETWORKS */
+.nchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.nchip{background:#1e1810;border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--gold)}
+
+/* NET CHECKS */
+.net-checks{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px}
+.net-check{display:flex;align-items:center;gap:6px;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:7px 11px;cursor:pointer;transition:all .2s}
+.net-check input{width:auto;padding:0;background:none;border:none;accent-color:var(--gold)}
+.net-check span{font-size:13px;color:var(--text2)}
+.net-check.checked{border-color:var(--gold);background:#2a1e08}
+
+/* IMPORT MODE */
+.imode{display:flex;gap:8px;margin-bottom:13px}
+.imode .bs{flex:1;text-align:center}
+.imode .bs.active{background:var(--bg4);border-color:var(--gold)}
+.ihint{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:13px;font-size:13px;color:var(--muted);line-height:1.7}
+
+/* HISTORY */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);font-weight:700}
+.stat-label{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.hist-section-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:14px 0 9px;font-weight:700}
+.hist-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:9px}
+.hist-title{font-size:14px;color:var(--gold);font-family:'Cormorant Garamond',serif;margin-bottom:3px}
+.hist-meta{font-size:12px;color:var(--muted);margin-bottom:6px}
+.hist-nets{display:flex;gap:5px;flex-wrap:wrap}
+.hist-net{font-size:11px;padding:2px 8px;border-radius:20px;background:#2a2010;color:var(--gold)}
+
+/* BACKUP */
+.backup-box{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:16px;margin-bottom:14px}
+.backup-title{font-size:14px;color:var(--gold);font-weight:700;margin-bottom:5px}
+.backup-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:12px}
+.info-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:13px;font-size:13px;color:var(--muted);line-height:1.8}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:flex-end}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:22px 18px 28px;width:100%;border-top:1px solid var(--border2);max-height:92vh;overflow-y:auto}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-bottom:16px;font-weight:600}
+
+/* EDIT MODAL */
+.esel{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:13px;margin-bottom:16px}
+.esel-label{font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.esel-text{font-size:14px;color:var(--text2);line-height:1.7;font-style:italic;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--bg);padding:10px 20px;border-radius:30px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">✦ LUMINIS</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-text">Iniciando banco de dados SQLite...</div>
+</div>
+
+<div id="appShell" style="display:none">
+
+<div class="header">
+  <div>
+    <div class="logo">✦ LUMINIS</div>
+    <div class="logo-sub">Pensamentos & Reflexões</div>
+  </div>
+  <div class="hright">
+    <span class="db-pill" id="dbPill">● SQLite</span>
+    <span class="hcount" id="countLabel">—</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tb active" onclick="showTab('library')">📚 Biblioteca</button>
+  <button class="tb" onclick="showTab('add')">✍️ Novo</button>
+  <button class="tb" onclick="showTab('import')">📥 Importar</button>
+  <button class="tb" onclick="showTab('editor')">🎨 Imagem</button>
+  <button class="tb" onclick="showTab('history')">📅 Histórico</button>
+  <button class="tb" onclick="showTab('settings')">⚙️ Dados</button>
+</div>
+
+<!-- LIBRARY -->
+<div id="tab-library" class="content">
+  <div class="sbar">
+    <input type="text" placeholder="🔍 Buscar..." id="searchInput" oninput="renderLibrary()">
+    <select id="filterCat" onchange="renderLibrary()">
+      <option value="">Todas as categorias</option>
+      <option>Motivação</option><option>Filosofia</option><option>Psicologia</option>
+      <option>Espiritualidade</option><option>Vida</option><option>Amor</option>
+      <option>Trabalho</option><option>Outro</option>
+    </select>
+    <select id="filterStatus" onchange="renderLibrary()">
+      <option value="">Todos os status</option>
+      <option value="pending">Pendentes</option>
+      <option value="scheduled">Agendados</option>
+      <option value="posted">Postados</option>
+    </select>
+  </div>
+  <div id="libraryCards"></div>
+</div>
+
+<!-- ADD -->
+<div id="tab-add" class="content" style="display:none">
+  <div class="stitle">✍️ Novo Pensamento</div>
+  <div class="fg"><label>Título</label><input type="text" id="fTitle" placeholder="Ex: Sobre gratidão"></div>
+  <div class="fg"><label>Pensamento / Reflexão *</label><textarea id="fText" rows="6" placeholder="Escreva seu pensamento..."></textarea></div>
+  <div class="fg"><label>Categoria</label>
+    <select id="fCat"><option>Motivação</option><option>Filosofia</option><option>Psicologia</option><option>Espiritualidade</option><option>Vida</option><option>Amor</option><option>Trabalho</option><option>Outro</option></select>
+  </div>
+  <div class="fg"><label>Tags (separadas por vírgula)</label><input type="text" id="fTags" placeholder="amor, vida, paz"></div>
+  <button class="bp" onclick="addThought()">Salvar Pensamento →</button>
+</div>
+
+<!-- IMPORT -->
+<div id="tab-import" class="content" style="display:none">
+  <div class="stitle">📥 Importar Pensamentos</div>
+  <div class="imode">
+    <button class="bs active" id="mSingle" onclick="setIMode('single')">Pensamento único</button>
+    <button class="bs" id="mBulk" onclick="setIMode('bulk')">Em massa (1/linha)</button>
+  </div>
+  <div class="ihint" id="iHint">Cole um único pensamento abaixo.</div>
+  <div class="fg"><textarea id="iText" rows="9" placeholder="Cole aqui..."></textarea></div>
+  <button class="bp" onclick="importThoughts()">Importar →</button>
+</div>
+
+<!-- EDITOR -->
+<div id="tab-editor" class="content" style="display:none">
+  <div class="stitle">🎨 Criar Imagem</div>
+  <div id="edNone" class="empty">
+    <div class="empty-icon">👈</div>
+    <p>Selecione um pensamento na <a href="#" onclick="showTab('library');return false;" style="color:var(--gold)">Biblioteca</a>.</p>
+  </div>
+  <div id="edMain" style="display:none">
+    <div class="esel">
+      <div class="esel-label">Pensamento selecionado</div>
+      <div class="esel-text" id="edSelText"></div>
+      <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
+        <button class="bs" style="font-size:12px;padding:6px 12px" onclick="showTab('library')">Trocar</button>
+        <button class="bs success" style="font-size:12px;padding:6px 12px" onclick="openPostModal()">✓ Marcar Postado</button>
+        <button class="bs info" style="font-size:12px;padding:6px 12px" onclick="openSchedModal()">📅 Agendar</button>
+      </div>
+    </div>
+    <div class="fg"><label>Formato</label><div class="fgrid" id="fmtGrid"></div></div>
+    <div class="fg">
+      <label>Fundo</label>
+      <div class="swatches" id="swatches"></div>
+      <div class="brow">
+        <button class="bs" style="font-size:13px" onclick="document.getElementById('bgUp').click()">📷 Minha foto</button>
+        <button class="bs danger" id="rmBg" onclick="removeBg()" style="display:none;font-size:13px">✕ Remover</button>
+        <input type="file" id="bgUp" accept="image/*" style="display:none" onchange="handleBg(event)">
+      </div>
+    </div>
+    <div class="fg">
+      <label>Fonte do Texto</label>
+      <div class="font-grid" id="fontGridText"></div>
+    </div>
+    <div class="fg">
+      <label>Fonte da Assinatura</label>
+      <div class="font-grid" id="fontGridSig"></div>
+    </div>
+    <div class="fg">
+      <label>Assinatura <span id="sigDefaultHint" style="color:var(--muted2);font-size:10px;text-transform:none;letter-spacing:0">(padrão carregado — edite se quiser)</span></label>
+      <input type="text" id="authorName" placeholder="Seu nome ou @perfil">
+    </div>
+    <button class="bp" id="genBtn" onclick="generatePreview()">✨ Gerar Prévia</button>
+    <hr>
+    <div class="pbox" id="pbox">
+      <div class="pph"><div class="icon">🖼️</div><div>Clique em "Gerar Prévia"</div></div>
+    </div>
+    <div id="pActions" style="display:none;margin-top:13px">
+      <div class="brow" style="margin-bottom:11px">
+        <button class="bp" onclick="downloadImage()" style="flex:1">⬇️ Baixar PNG</button>
+        <button class="bs" onclick="copyText()">📋 Texto</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px">Postar em:</div>
+      <div class="nchips">
+        <div class="nchip">📸 Instagram</div><div class="nchip">🐦 Twitter/X</div>
+        <div class="nchip">💼 LinkedIn</div><div class="nchip">📘 Facebook</div><div class="nchip">🧵 Threads</div>
+      </div>
+      <div style="margin-top:9px;font-size:12px;color:var(--muted2);line-height:1.7" id="fmtHint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="tab-history" class="content" style="display:none">
+  <div class="stitle">📅 Histórico de Postagens</div>
+  <div id="histStats" class="stats"></div>
+  <div id="histBody"></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="tab-settings" class="content" style="display:none">
+  <div class="stitle">⚙️ Banco de Dados</div>
+
+  <div class="backup-box">
+    <div class="backup-title">✍️ Assinatura Padrão</div>
+    <div class="backup-desc">Será preenchida automaticamente ao criar imagens. Pode ser alterada na hora da postagem sem mudar o padrão.</div>
+    <div class="fg" style="margin-bottom:10px">
+      <input type="text" id="defaultSignature" placeholder="Ex: @seuperfil ou Seu Nome" oninput="saveDefaultSignature()">
+    </div>
+    <div style="font-size:12px;color:var(--muted)">Salvo automaticamente ao digitar.</div>
+  </div>
+
+  <div class="backup-box">
+    <div class="backup-title">💾 Salvar banco SQLite</div>
+    <div class="backup-desc">Exporta o banco de dados real como arquivo <strong style="color:var(--gold)">.sqlite</strong>. Pode abrir no PC com <em>DB Browser for SQLite</em>.</div>
+    <button class="bp" onclick="exportSQLite()">Exportar .sqlite</button>
+  </div>
+
+  <div class="backup-box">
+    <div class="backup-title">📂 Carregar banco SQLite</div>
+    <div class="backup-desc">Carrega um arquivo <strong style="color:var(--gold)">.sqlite</strong> exportado anteriormente. <strong style="color:var(--danger)">Substitui</strong> os dados atuais.</div>
+    <button class="bs" style="width:100%;text-align:center" onclick="document.getElementById('loadSqlite').click()">Selecionar arquivo .sqlite</button>
+    <input type="file" id="loadSqlite" accept=".sqlite,.db" style="display:none" onchange="importSQLite(event)">
+  </div>
+
+  <div class="backup-box">
+    <div class="backup-title">📤 Exportar JSON (backup legível)</div>
+    <div class="backup-desc">Exporta todos os pensamentos em <strong style="color:var(--gold)">.json</strong> — útil para leitura, edição manual ou transferência.</div>
+    <button class="bs" style="width:100%;text-align:center" onclick="exportJSON()">Exportar .json</button>
+  </div>
+
+  <div class="backup-box">
+    <div class="backup-title">📥 Importar JSON</div>
+    <div class="backup-desc">Importa pensamentos de um <strong style="color:var(--gold)">.json</strong> exportado. Pensamentos existentes são preservados (sem duplicatas).</div>
+    <button class="bs" style="width:100%;text-align:center" onclick="document.getElementById('loadJson').click()">Selecionar arquivo .json</button>
+    <input type="file" id="loadJson" accept=".json" style="display:none" onchange="importJSON(event)">
+  </div>
+
+  <div class="backup-box">
+    <div class="backup-title" style="color:var(--danger)">🗑️ Limpar tudo</div>
+    <div class="backup-desc">Remove <strong>todos</strong> os pensamentos. Irreversível. Exporte um backup antes!</div>
+    <button class="bs danger" style="width:100%;text-align:center" onclick="clearAll()">Apagar todos os dados</button>
+  </div>
+
+  <div class="info-box">
+    <strong style="color:var(--gold)">ℹ️ Como funciona o SQLite aqui</strong><br><br>
+    O app usa <strong style="color:var(--text2)">sql.js</strong> — o SQLite real compilado para WebAssembly. O banco fica em memória durante o uso e é salvo num arquivo <code style="color:var(--gold)">.sqlite</code> no seu celular.<br><br>
+    <strong style="color:var(--warn)">⚠️ Importante:</strong> Para não perder dados ao fechar o navegador, salve o banco periodicamente usando "Exportar .sqlite". Na próxima vez, carregue o arquivo salvo.<br><br>
+    O arquivo <code>.sqlite</code> pode ser aberto no PC com <strong style="color:var(--text2)">DB Browser for SQLite</strong> (gratuito).
+  </div>
+</div>
+
+</div><!-- /appShell -->
+
+<!-- MODAL EDITAR -->
+<div id="editModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('editModal')">
+  <div class="modal">
+    <div class="modal-title">✏️ Editar Pensamento</div>
+    <input type="hidden" id="editId">
+    <div class="fg"><label>Título</label><input type="text" id="editTitle"></div>
+    <div class="fg"><label>Pensamento / Reflexão</label><textarea id="editText" rows="6"></textarea></div>
+    <div class="fg"><label>Categoria</label>
+      <select id="editCat"><option>Motivação</option><option>Filosofia</option><option>Psicologia</option><option>Espiritualidade</option><option>Vida</option><option>Amor</option><option>Trabalho</option><option>Outro</option></select>
+    </div>
+    <div class="fg"><label>Tags (vírgula)</label><input type="text" id="editTags"></div>
+    <div class="brow">
+      <button class="bp" style="flex:1" onclick="saveEdit()">Salvar Alterações</button>
+      <button class="bs" onclick="closeModal('editModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGENDAR -->
+<div id="schedModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('schedModal')">
+  <div class="modal">
+    <div class="modal-title">📅 Agendar Postagem</div>
+    <div class="fg"><label>Data</label><input type="date" id="schedDate"></div>
+    <div class="fg"><label>Redes sociais</label>
+      <div class="net-checks" id="schedNets">
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Instagram"><span>📸 Instagram</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Twitter/X"><span>🐦 Twitter/X</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="LinkedIn"><span>💼 LinkedIn</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Facebook"><span>📘 Facebook</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Threads"><span>🧵 Threads</span></label>
+      </div>
+    </div>
+    <div class="fg"><label>Observação (opcional)</label><input type="text" id="schedNote" placeholder="Ex: postar às 18h"></div>
+    <div class="brow">
+      <button class="bp" style="flex:1" onclick="saveSchedule()">Salvar Agendamento</button>
+      <button class="bs" onclick="closeModal('schedModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MARCAR POSTADO -->
+<div id="postModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('postModal')">
+  <div class="modal">
+    <div class="modal-title">✓ Marcar como Postado</div>
+    <div class="fg"><label>Data da postagem</label><input type="date" id="postDate"></div>
+    <div class="fg"><label>Redes sociais</label>
+      <div class="net-checks" id="postNets">
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Instagram"><span>📸 Instagram</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Twitter/X"><span>🐦 Twitter/X</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="LinkedIn"><span>💼 LinkedIn</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Facebook"><span>📘 Facebook</span></label>
+        <label class="net-check" onclick="toggleNet(this)"><input type="checkbox" value="Threads"><span>🧵 Threads</span></label>
+      </div>
+    </div>
+    <div class="fg"><label>Nota (opcional)</label><input type="text" id="postNote" placeholder="Ex: bom engajamento"></div>
+    <div class="brow">
+      <button class="bp" style="flex:1" onclick="savePosted()">Confirmar</button>
+      <button class="bs" onclick="closeModal('postModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// SQL.JS — SQLite via WebAssembly
+// ══════════════════════════════════════════════════════════════
+let SQL, db;
+
+async function initSQLite() {
+  SQL = await initSqlJs({
+    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+  });
+
+  // Try load saved DB from localStorage (binary as base64)
+  const saved = localStorage.getItem('luminis_sqlite_b64');
+  if (saved) {
+    try {
+      const bin = base64ToUint8(saved);
+      db = new SQL.Database(bin);
+      ensureSchema();
+      return;
+    } catch(e) { console.warn('Could not load saved DB, creating fresh.'); }
+  }
+  db = new SQL.Database();
+  ensureSchema();
+  seedSamples();
+}
+
+function ensureSchema() {
+  db.run(`CREATE TABLE IF NOT EXISTS thoughts (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    title     TEXT NOT NULL,
+    text      TEXT NOT NULL,
+    category  TEXT DEFAULT 'Outro',
+    tags      TEXT DEFAULT '',
+    status    TEXT DEFAULT 'pending',
+    schedule  TEXT DEFAULT NULL,
+    posts     TEXT DEFAULT '[]',
+    created_at TEXT NOT NULL
+  )`);
+}
+
+function seedSamples() {
+  const samples = [
+    ['Sobre o presente','Cada amanhecer traz consigo a oportunidade de reescrever quem somos. Não somos prisioneiros do ontem.','Motivação','presente,recomeço'],
+    ['Sobre silêncio','O silêncio não é ausência de som. É a presença de algo que palavras ainda não alcançaram.','Filosofia','silêncio,reflexão'],
+    ['Sobre conexão','As pessoas mais solitárias são aquelas cercadas de ruído, mas distantes de si mesmas.','Psicologia','solidão,conexão'],
+  ];
+  const stmt = db.prepare('INSERT INTO thoughts (title,text,category,tags,status,posts,created_at) VALUES (?,?,?,?,?,?,?)');
+  samples.forEach(s => stmt.run([s[0],s[1],s[2],s[3],'pending','[]',today()]));
+  stmt.free();
+  persistDB();
+}
+
+// ── CRUD ─────────────────────────────────────────────────────
+function dbGetAll(filters={}) {
+  let sql = 'SELECT * FROM thoughts WHERE 1=1';
+  const params = [];
+  if (filters.q) { sql += ' AND (LOWER(title) LIKE ? OR LOWER(text) LIKE ?)'; params.push(`%${filters.q}%`,`%${filters.q}%`); }
+  if (filters.cat) { sql += ' AND category = ?'; params.push(filters.cat); }
+  if (filters.status) { sql += ' AND status = ?'; params.push(filters.status); }
+  sql += ' ORDER BY id DESC';
+  return queryAll(sql, params);
+}
+
+function dbGetById(id) { return queryAll('SELECT * FROM thoughts WHERE id=?',[id])[0]||null; }
+
+function dbInsert(t) {
+  db.run('INSERT INTO thoughts (title,text,category,tags,status,schedule,posts,created_at) VALUES (?,?,?,?,?,?,?,?)',
+    [t.title,t.text,t.category,t.tags||'','pending',null,'[]',today()]);
+  persistDB();
+  return db.exec('SELECT last_insert_rowid() as id')[0].values[0][0];
+}
+
+function dbUpdate(t) {
+  db.run('UPDATE thoughts SET title=?,text=?,category=?,tags=?,status=?,schedule=?,posts=? WHERE id=?',
+    [t.title,t.text,t.category,t.tags||'',t.status,t.schedule||null,t.posts||'[]',t.id]);
+  persistDB();
+}
+
+function dbDelete(id) { db.run('DELETE FROM thoughts WHERE id=?',[id]); persistDB(); }
+function dbClear()    { db.run('DELETE FROM thoughts'); persistDB(); }
+
+function queryAll(sql, params=[]) {
+  const res = db.exec(sql, params);
+  if (!res.length) return [];
+  const {columns, values} = res[0];
+  return values.map(row => {
+    const obj={};
+    columns.forEach((c,i)=>obj[c]=row[i]);
+    return obj;
+  });
+}
+
+// ── PERSIST ───────────────────────────────────────────────────
+function persistDB() {
+  try {
+    const data = db.export();
+    localStorage.setItem('luminis_sqlite_b64', uint8ToBase64(data));
+  } catch(e) { console.warn('Persist failed:', e); }
+}
+
+function uint8ToBase64(u8) {
+  let b=''; u8.forEach(b2=>b+=String.fromCharCode(b2));
+  return btoa(b);
+}
+function base64ToUint8(b64) {
+  const bin=atob(b64), u8=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+  return u8;
+}
+
+// ══════════════════════════════════════════════════════════════
+// VISUAL DATA
+// ══════════════════════════════════════════════════════════════
+const GRADIENTS = [
+  {name:"Aurora",    v:["#1a1a2e","#0f3460"],t:"#e8d5b7"},
+  {name:"Entardecer",v:["#2d1b69","#11998e"],t:"#fff8f0"},
+  {name:"Bruma",     v:["#232526","#414345"],t:"#f5f0e8"},
+  {name:"Pôr Sol",   v:["#b06ab3","#4568dc"],t:"#fff5e6"},
+  {name:"Terra",     v:["#3e1f00","#8b4513"],t:"#fdf0d5"},
+  {name:"Névoa",     v:["#c9d6df","#e0e0e0"],t:"#2d2d2d"},
+  {name:"Oceano",    v:["#0a3d62","#1e3799"],t:"#dff9fb"},
+  {name:"Floresta",  v:["#1a3a1a","#2d5a27"],t:"#f0ffe0"},
+];
+const FONTS_TEXT = [
+  {name:"Cormorant",   v:"'Cormorant Garamond', serif",    sample:"Pensamento"},
+  {name:"Playfair",    v:"'Playfair Display', serif",       sample:"Pensamento"},
+  {name:"Lora",        v:"'Lora', serif",                   sample:"Pensamento"},
+  {name:"Merriweather",v:"'Merriweather', serif",           sample:"Pensamento"},
+  {name:"EB Garamond", v:"'EB Garamond', serif",            sample:"Pensamento"},
+  {name:"Libre Baskerville",v:"'Libre Baskerville', serif", sample:"Pensamento"},
+  {name:"Crimson Text",v:"'Crimson Text', serif",           sample:"Pensamento"},
+  {name:"Cinzel",      v:"'Cinzel', serif",                 sample:"PENSAMENTO"},
+  {name:"Raleway",     v:"'Raleway', sans-serif",           sample:"Pensamento"},
+  {name:"Josefin Sans",v:"'Josefin Sans', sans-serif",      sample:"Pensamento"},
+  {name:"Nunito",      v:"'Nunito', sans-serif",            sample:"Pensamento"},
+  {name:"Georgia",     v:"Georgia, serif",                  sample:"Pensamento"},
+];
+const FONTS_SIG = [
+  {name:"Cormorant Itálico", v:"'Cormorant Garamond', serif",    sample:"— @perfil", style:"italic"},
+  {name:"Playfair Itálico",  v:"'Playfair Display', serif",       sample:"— @perfil", style:"italic"},
+  {name:"Lora Itálico",      v:"'Lora', serif",                   sample:"— @perfil", style:"italic"},
+  {name:"Dancing Script",    v:"'Dancing Script', cursive",       sample:"— @perfil", style:"normal"},
+  {name:"Great Vibes",       v:"'Great Vibes', cursive",          sample:"— @perfil", style:"normal"},
+  {name:"Sacramento",        v:"'Sacramento', cursive",           sample:"— @perfil", style:"normal"},
+  {name:"Pacifico",          v:"'Pacifico', cursive",             sample:"— @perfil", style:"normal"},
+  {name:"Raleway",           v:"'Raleway', sans-serif",           sample:"— @perfil", style:"italic"},
+  {name:"Josefin Sans",      v:"'Josefin Sans', sans-serif",      sample:"— @perfil", style:"italic"},
+  {name:"Crimson Itálico",   v:"'Crimson Text', serif",           sample:"— @perfil", style:"italic"},
+  {name:"Nunito",            v:"'Nunito', sans-serif",            sample:"— @perfil", style:"normal"},
+  {name:"Georgia",           v:"Georgia, serif",                  sample:"— @perfil", style:"italic"},
+];
+const FORMATS = [
+  {label:"Instagram Post", icon:"⬛",w:1080,h:1080},
+  {label:"Instagram Story",icon:"📱",w:1080,h:1920},
+  {label:"Twitter/X",      icon:"🐦",w:1200,h:675},
+  {label:"LinkedIn",       icon:"💼",w:1200,h:627},
+];
+
+// ══════════════════════════════════════════════════════════════
+// APP STATE
+// ══════════════════════════════════════════════════════════════
+let selectedId=null, selGrad=0, selFontText=0, selFontSig=0, selFmt=0;
+let uploadedBg=null, previewUrl=null, importMode='single';
+
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
+function showTab(name) {
+  ['library','add','import','editor','history','settings'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===name?'':'none';
+  });
+  document.querySelectorAll('.tb').forEach((b,i)=>{
+    b.classList.toggle('active',['library','add','import','editor','history','settings'][i]===name);
+  });
+  if(name==='library') renderLibrary();
+  if(name==='editor')  renderEditor();
+  if(name==='history') renderHistory();
+  if(name==='settings') loadDefaultSignatureField();
+}
+
+// ══════════════════════════════════════════════════════════════
+// LIBRARY
+// ══════════════════════════════════════════════════════════════
+function renderLibrary() {
+  const q  = (document.getElementById('searchInput').value||'').toLowerCase();
+  const cat= document.getElementById('filterCat').value;
+  const st = document.getElementById('filterStatus').value;
+  const all = dbGetAll({q,cat,status:st});
+  const total = queryAll('SELECT COUNT(*) as n FROM thoughts')[0]?.n||0;
+  document.getElementById('countLabel').textContent = total+' pensamentos';
+
+  const c=document.getElementById('libraryCards');
+  if(!all.length){c.innerHTML=`<div class="empty"><div class="empty-icon">📖</div><p>Nenhum pensamento encontrado.</p></div>`;return;}
+
+  c.innerHTML=all.map(t=>{
+    let sched=null; try{sched=t.schedule?JSON.parse(t.schedule):null;}catch(e){}
+    const chip = t.status==='posted'
+      ? `<span class="schip chip-posted">✓ Postado</span>`
+      : t.status==='scheduled'
+      ? `<span class="schip chip-sched">📅 ${sched?.date||''}</span>`
+      : `<span class="schip chip-pending">Pendente</span>`;
+    return `
+    <div class="card${selectedId===t.id?' selected':''}">
+      <div class="card-head">
+        <div class="card-title" onclick="selectThought(${t.id})">${esc(t.title)}</div>
+        <div class="card-actions">
+          <button class="icon-btn" title="Editar" onclick="openEdit(${t.id})">✏️</button>
+          <button class="icon-btn" title="Excluir" onclick="delThought(${t.id})">🗑️</button>
+        </div>
+      </div>
+      <div class="card-text" onclick="selectThought(${t.id})">"${esc(t.text)}"</div>
+      <div class="card-foot">
+        <span class="badge">${esc(t.category)}</span>
+        ${(t.tags||'').split(',').filter(Boolean).map(tg=>`<span class="tag">#${esc(tg.trim())}</span>`).join('')}
+        <span class="cdate">${t.created_at}</span>
+      </div>
+      <div class="status-row">${chip}</div>
+    </div>`
+  }).join('');
+}
+
+function selectThought(id) {
+  selectedId=id; previewUrl=null;
+  // Reset sig field so default reloads for new thought
+  const sigField = document.getElementById('authorName');
+  if (sigField) { sigField.dataset.userEdited = ''; }
+  renderLibrary(); showTab('editor');
+}
+
+function delThought(id) {
+  if(!confirm('Excluir este pensamento?')) return;
+  dbDelete(id);
+  if(selectedId===id) selectedId=null;
+  renderLibrary(); toast('Excluído');
+}
+
+// ══════════════════════════════════════════════════════════════
+// EDIT
+// ══════════════════════════════════════════════════════════════
+function openEdit(id) {
+  const t=dbGetById(id); if(!t)return;
+  document.getElementById('editId').value=t.id;
+  document.getElementById('editTitle').value=t.title;
+  document.getElementById('editText').value=t.text;
+  document.getElementById('editCat').value=t.category;
+  document.getElementById('editTags').value=t.tags||'';
+  document.getElementById('editModal').style.display='flex';
+}
+
+function saveEdit() {
+  const id=parseInt(document.getElementById('editId').value);
+  const t=dbGetById(id); if(!t)return;
+  const newText=document.getElementById('editText').value.trim();
+  if(!newText){toast('O pensamento não pode ser vazio!');return;}
+  // check duplicate only if text actually changed
+  if(newText.toLowerCase().trim() !== (t.text||'').toLowerCase().trim()){
+    const dup=queryAll('SELECT id FROM thoughts WHERE LOWER(TRIM(text))=LOWER(TRIM(?)) AND id!=?',[newText,id]);
+    if(dup.length){toast('⚠️ Já existe um pensamento com esse texto!');return;}
+  }
+  t.title   =document.getElementById('editTitle').value.trim()||'Sem título';
+  t.text    =newText;
+  t.category=document.getElementById('editCat').value;
+  t.tags    =document.getElementById('editTags').value;
+  dbUpdate(t);
+  closeModal('editModal');
+  renderLibrary();
+  if(selectedId===id) renderEditor();
+  toast('Pensamento atualizado ✦');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADD
+// ══════════════════════════════════════════════════════════════
+function addThought() {
+  const text=document.getElementById('fText').value.trim();
+  if(!text){toast('Escreva o pensamento!');return;}
+  const dup=queryAll('SELECT id FROM thoughts WHERE LOWER(TRIM(text))=LOWER(TRIM(?))',[text]);
+  if(dup.length){toast('⚠️ Esse pensamento já existe na biblioteca!');return;}
+  dbInsert({
+    title: document.getElementById('fTitle').value.trim()||'Sem título',
+    text,
+    category: document.getElementById('fCat').value,
+    tags: document.getElementById('fTags').value,
+  });
+  document.getElementById('fTitle').value='';
+  document.getElementById('fText').value='';
+  document.getElementById('fTags').value='';
+  toast('Pensamento salvo! ✦');
+  showTab('library');
+}
+
+// ══════════════════════════════════════════════════════════════
+// IMPORT
+// ══════════════════════════════════════════════════════════════
+function setIMode(m) {
+  importMode=m;
+  document.getElementById('mSingle').classList.toggle('active',m==='single');
+  document.getElementById('mBulk').classList.toggle('active',m==='bulk');
+  document.getElementById('iHint').textContent=m==='single'
+    ?'Cole um único pensamento abaixo.'
+    :'Cole múltiplos pensamentos, um por linha. Cada linha se torna um registro separado.';
+  document.getElementById('iText').placeholder=m==='bulk'
+    ?'Pensamento 1...\nPensamento 2...\nPensamento 3...':'Cole aqui...';
+}
+
+function importThoughts() {
+  const text=document.getElementById('iText').value.trim();
+  if(!text){toast('Cole o texto!');return;}
+  let added=0, skipped=0;
+  if(importMode==='single') {
+    const dup=queryAll('SELECT id FROM thoughts WHERE LOWER(TRIM(text))=LOWER(TRIM(?))',[text]);
+    if(dup.length){toast('⚠️ Esse pensamento já existe na biblioteca!');return;}
+    dbInsert({title:'Importado',text,category:'Outro',tags:''});
+    added=1;
+  } else {
+    const lines=text.split('\n').filter(l=>l.trim().length>8);
+    lines.forEach((l,i)=>{
+      const t=l.trim();
+      const dup=queryAll('SELECT id FROM thoughts WHERE LOWER(TRIM(text))=LOWER(TRIM(?))',[t]);
+      if(dup.length){skipped++;return;}
+      dbInsert({title:`Pensamento ${i+1}`,text:t,category:'Outro',tags:''});
+      added++;
+    });
+  }
+  document.getElementById('iText').value='';
+  const msg = skipped>0
+    ? `${added} importado(s), ${skipped} duplicado(s) ignorado(s)`
+    : `${added} pensamento(s) importado(s) ✦`;
+  toast(msg);
+  if(added>0) showTab('library');
+}
+
+// ══════════════════════════════════════════════════════════════
+// EDITOR
+// ══════════════════════════════════════════════════════════════
+function renderEditor() {
+  const t=selectedId?dbGetById(selectedId):null;
+  document.getElementById('edNone').style.display=t?'none':'';
+  document.getElementById('edMain').style.display=t?'':'none';
+  if(!t)return;
+
+  document.getElementById('edSelText').textContent='"'+t.text.substring(0,150)+(t.text.length>150?'...':`"`);
+
+  document.getElementById('swatches').innerHTML=GRADIENTS.map((g,i)=>`
+    <button class="swatch${selGrad===i?' active':''}" onclick="pickGrad(${i})"
+      style="background:linear-gradient(135deg,${g.v[0]},${g.v[1]});color:${g.t}">${g.name}</button>`).join('');
+
+  document.getElementById('fmtGrid').innerHTML=FORMATS.map((f,i)=>`
+    <button class="fbtn${selFmt===i?' active':''}" onclick="pickFmt(${i})">
+      <div class="fbtn-label">${f.icon} ${f.label}</div>
+      <div class="fbtn-size">${f.w}×${f.h}</div>
+    </button>`).join('');
+
+  document.getElementById('fontGridText').innerHTML=FONTS_TEXT.map((f,i)=>`
+    <button class="fontbtn${selFontText===i?' active':''}" onclick="pickFontText(${i})">
+      <div class="fontbtn-name">${f.name}</div>
+      <div class="fontbtn-sample" style="font-family:${f.v}">${f.sample}</div>
+    </button>`).join('');
+
+  document.getElementById('fontGridSig').innerHTML=FONTS_SIG.map((f,i)=>`
+    <button class="fontbtn${selFontSig===i?' active':''}" onclick="pickFontSig(${i})">
+      <div class="fontbtn-name">${f.name}</div>
+      <div class="fontbtn-sample" style="font-family:${f.v};font-style:${f.style}">${f.sample}</div>
+    </button>`).join('');
+
+  document.getElementById('rmBg').style.display=uploadedBg?'':'none';
+
+  // Load default signature if field is empty
+  const sigField = document.getElementById('authorName');
+  const defSig = localStorage.getItem('luminis_default_sig') || '';
+  if (!sigField.dataset.userEdited) {
+    sigField.value = defSig;
+  }
+  const hint = document.getElementById('sigDefaultHint');
+  hint.style.display = defSig && !sigField.dataset.userEdited ? '' : 'none';
+
+  // Track manual edits so we don't overwrite on re-render
+  if (!sigField._listenerAdded) {
+    sigField._listenerAdded = true;
+    sigField.addEventListener('input', () => { sigField.dataset.userEdited = '1'; hint.style.display='none'; });
+  }
+}
+
+function pickGrad(i){selGrad=i;uploadedBg=null;document.getElementById('rmBg').style.display='none';renderEditor();}
+function pickFmt(i){selFmt=i;renderEditor();}
+function pickFontText(i){selFontText=i;renderEditor();}
+function pickFontSig(i){selFontSig=i;renderEditor();}
+function handleBg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{uploadedBg=ev.target.result;document.getElementById('rmBg').style.display='';renderEditor();};r.readAsDataURL(f);}
+function removeBg(){uploadedBg=null;document.getElementById('rmBg').style.display='none';renderEditor();}
+
+async function generatePreview(){
+  const t=selectedId?dbGetById(selectedId):null; if(!t)return;
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true; btn.textContent='⏳ Gerando...';
+  try {
+    const url=await drawCard({thought:t,fmt:FORMATS[selFmt],grad:GRADIENTS[selGrad],fontText:FONTS_TEXT[selFontText],fontSig:FONTS_SIG[selFontSig],author:document.getElementById('authorName').value.trim(),bg:uploadedBg});
+    previewUrl=url;
+    document.getElementById('pbox').innerHTML=`<img src="${url}" alt="preview">`;
+    document.getElementById('pActions').style.display='';
+    document.getElementById('fmtHint').textContent=`${FORMATS[selFmt].label} — ${FORMATS[selFmt].w}×${FORMATS[selFmt].h}px`;
+  }catch(e){toast('Erro ao gerar imagem');}
+  btn.disabled=false; btn.textContent='✨ Gerar Prévia';
+}
+
+function downloadImage(){if(!previewUrl)return;const a=document.createElement('a');a.href=previewUrl;a.download='luminis_'+Date.now()+'.png';a.click();toast('Imagem baixada ✦');}
+function copyText(){const t=selectedId?dbGetById(selectedId):null;if(!t)return;navigator.clipboard.writeText(t.text).then(()=>toast('Texto copiado!'));}
+
+// ══════════════════════════════════════════════════════════════
+// CANVAS
+// ══════════════════════════════════════════════════════════════
+function drawCard({thought,fmt,grad,fontText,fontSig,author,bg}){
+  return new Promise(resolve=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=fmt.w;canvas.height=fmt.h;
+    const ctx=canvas.getContext('2d');
+    const W=fmt.w,H=fmt.h;
+    const fv=fontText.v, sv=fontSig.v, sigStyle=fontSig.style||'italic';
+    function render(){
+      if(bg){const img=new Image();img.onload=()=>{ctx.drawImage(img,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,W,H);draw();resolve(canvas.toDataURL('image/png'));};img.src=bg;}
+      else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,grad.v[0]);g.addColorStop(1,grad.v[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);draw();resolve(canvas.toDataURL('image/png'));}
+    }
+    function draw(){
+      const pad=W*.1,tc=bg?'#fff':grad.t,mW=W-pad*2;
+
+      // ── App name watermark ──
+      const brandFs=W*0.028;
+      ctx.save();
+      ctx.globalAlpha=0.22;
+      ctx.fillStyle=tc;
+      ctx.font=`300 ${brandFs}px 'Helvetica Neue', sans-serif`;
+      ctx.textAlign='center';
+      ctx.fillText('✦  L U M I N I S',W/2,H*0.072);
+      const brandW=ctx.measureText('✦  L U M I N I S').width*1.1;
+      ctx.strokeStyle=tc;ctx.lineWidth=W*0.0015;
+      ctx.beginPath();ctx.moveTo(W/2-brandW/2,H*0.085);ctx.lineTo(W/2+brandW/2,H*0.085);ctx.stroke();
+      ctx.restore();
+
+      // ── Decorative line top ──
+      ctx.strokeStyle=tc;ctx.globalAlpha=.18;ctx.lineWidth=W*.003;
+      ctx.beginPath();ctx.moveTo(pad,H*.13);ctx.lineTo(W-pad,H*.13);ctx.stroke();
+      ctx.globalAlpha=1;
+
+      // ── Big opening quote (uses text font) ──
+      ctx.globalAlpha=.1;ctx.fillStyle=tc;
+      ctx.font=`bold ${W*.28}px ${fv}`;
+      ctx.textAlign='left';
+      ctx.fillText('\u201c',pad*.6,H*.35);ctx.globalAlpha=1;
+
+      // ── Main text ──
+      const fs=Math.min(W*.056,68);
+      ctx.fillStyle=tc;ctx.font=`${fs}px ${fv}`;ctx.textAlign='center';
+      const words=thought.text.split(' '),lines=[];let line='';
+      for(const w of words){const test=line+(line?' ':'')+w;if(ctx.measureText(test).width>mW){lines.push(line);line=w;}else line=test;}
+      if(line)lines.push(line);
+      const lh=fs*1.6,totH=lines.length*lh;let y=(H-totH)/2+fs*.4;
+      lines.forEach((l,i)=>ctx.fillText(l,W/2,y+i*lh));
+
+      // ── Signature (uses sig font) ──
+      if(author){
+        const sigFs=fs*0.54;
+        ctx.font=`${sigStyle} ${sigFs}px ${sv}`;
+        ctx.globalAlpha=.75;
+        ctx.fillText('\u2014 '+author,W/2,y+totH+lh*.85);
+        ctx.globalAlpha=1;
+      }
+
+      // ── Decorative line bottom ──
+      ctx.strokeStyle=tc;ctx.globalAlpha=.18;
+      ctx.beginPath();ctx.moveTo(pad,H*.88);ctx.lineTo(W-pad,H*.88);ctx.stroke();ctx.globalAlpha=1;
+    }
+    render();
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCHEDULE & POST
+// ══════════════════════════════════════════════════════════════
+function toggleNet(label){const cb=label.querySelector('input');setTimeout(()=>label.classList.toggle('checked',cb.checked),0);}
+
+function openSchedModal(){
+  if(!selectedId)return;
+  document.getElementById('schedDate').value=today();
+  document.querySelectorAll('#schedNets input').forEach(cb=>{cb.checked=false;cb.closest('.net-check').classList.remove('checked');});
+  document.getElementById('schedNote').value='';
+  document.getElementById('schedModal').style.display='flex';
+}
+
+function saveSchedule(){
+  const t=dbGetById(selectedId);if(!t)return;
+  const date=document.getElementById('schedDate').value;
+  if(!date){toast('Selecione uma data!');return;}
+  const nets=[...document.querySelectorAll('#schedNets input:checked')].map(cb=>cb.value);
+  const note=document.getElementById('schedNote').value.trim();
+  t.schedule=JSON.stringify({date,nets,note});
+  t.status='scheduled';
+  dbUpdate(t);
+  closeModal('schedModal');
+  renderEditor(); toast(`Agendado para ${date} ✦`);
+}
+
+function openPostModal(){
+  if(!selectedId)return;
+  document.getElementById('postDate').value=today();
+  document.querySelectorAll('#postNets input').forEach(cb=>{cb.checked=false;cb.closest('.net-check').classList.remove('checked');});
+  document.getElementById('postNote').value='';
+  document.getElementById('postModal').style.display='flex';
+}
+
+function savePosted(){
+  const t=dbGetById(selectedId);if(!t)return;
+  const date=document.getElementById('postDate').value||today();
+  const nets=[...document.querySelectorAll('#postNets input:checked')].map(cb=>cb.value);
+  const note=document.getElementById('postNote').value.trim();
+  let posts=[];try{posts=JSON.parse(t.posts||'[]');}catch(e){}
+  posts.push({date,nets,note});
+  t.posts=JSON.stringify(posts);
+  t.status='posted'; t.schedule=null;
+  dbUpdate(t);
+  closeModal('postModal'); renderEditor(); toast('Marcado como postado ✦');
+}
+
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+// ══════════════════════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════════════════════
+function renderHistory(){
+  const all=queryAll('SELECT * FROM thoughts ORDER BY id DESC');
+  const posted=all.filter(t=>t.status==='posted');
+  const scheduled=all.filter(t=>t.status==='scheduled');
+  const pending=all.filter(t=>t.status==='pending');
+
+  document.getElementById('histStats').innerHTML=`
+    <div class="stat"><div class="stat-num">${all.length}</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--success)">${posted.length}</div><div class="stat-label">Postados</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--info)">${scheduled.length}</div><div class="stat-label">Agendados</div></div>
+  `;
+
+  let html='';
+
+  if(scheduled.length){
+    html+=`<div class="hist-section-title" style="color:var(--info)">📅 Agendados</div>`;
+    html+=scheduled.map(t=>{
+      let s=null;try{s=JSON.parse(t.schedule||'null');}catch(e){}
+      return`<div class="hist-card">
+        <div class="hist-title">${esc(t.title)}</div>
+        <div class="hist-meta">Para <strong>${s?.date||'—'}</strong>${s?.note?' · '+esc(s.note):''}</div>
+        <div class="hist-nets">${(s?.nets||[]).map(n=>`<span class="hist-net">${n}</span>`).join('')}</div>
+        <div style="margin-top:9px;display:flex;gap:7px">
+          <button class="bs success" style="font-size:12px;padding:5px 11px" onclick="selectedId=${t.id};openPostModal()">✓ Confirmar postagem</button>
+          <button class="bs" style="font-size:12px;padding:5px 11px" onclick="selectedId=${t.id};showTab('editor')">Abrir</button>
+        </div>
+      </div>`
+    }).join('');
+  }
+
+  if(posted.length){
+    html+=`<div class="hist-section-title" style="color:var(--success);margin-top:${scheduled.length?'8px':'0'}">✓ Postados</div>`;
+    html+=posted.map(t=>{
+      let posts=[];try{posts=JSON.parse(t.posts||'[]');}catch(e){}
+      const last=posts.slice(-1)[0];
+      return`<div class="hist-card">
+        <div class="hist-title">${esc(t.title)}</div>
+        <div class="hist-meta">${last?`Postado em <strong>${last.date}</strong>${last.note?' · '+esc(last.note):''}`:''} <span style="color:var(--muted2)">(${posts.length}x)</span></div>
+        <div class="hist-nets">${(last?.nets||[]).map(n=>`<span class="hist-net">${n}</span>`).join('')}</div>
+      </div>`
+    }).join('');
+  }
+
+  if(!scheduled.length&&!posted.length){
+    html=`<div class="empty"><div class="empty-icon">📭</div><p>Nenhuma postagem registrada.<br>Use a aba 🎨 Imagem para agendar ou marcar como postado.</p></div>`;
+  }
+
+  document.getElementById('histBody').innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SETTINGS — SQLite export/import
+// ══════════════════════════════════════════════════════════════
+function exportSQLite(){
+  const data=db.export();
+  const blob=new Blob([data],{type:'application/octet-stream'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`luminis_${today()}.sqlite`;a.click();
+  URL.revokeObjectURL(url);
+  toast('Banco .sqlite exportado ✦');
+}
+
+function importSQLite(e){
+  const file=e.target.files[0];if(!file)return;
+  if(!confirm('Isso substituirá todos os dados atuais. Continuar?')){e.target.value='';return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const u8=new Uint8Array(ev.target.result);
+      db=new SQL.Database(u8);
+      ensureSchema();
+      persistDB();
+      renderLibrary();
+      toast('Banco carregado com sucesso ✦');
+    }catch(err){toast('Arquivo inválido!');}
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value='';
+}
+
+function exportJSON(){
+  const all=queryAll('SELECT * FROM thoughts ORDER BY id DESC');
+  const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),thoughts:all},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`luminis_backup_${today()}.json`;a.click();
+  URL.revokeObjectURL(url);
+  toast('JSON exportado ✦');
+}
+
+function importJSON(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const items=data.thoughts||data;
+      if(!Array.isArray(items)){toast('Arquivo inválido!');return;}
+      let added=0;
+      items.forEach(t=>{
+        const exists=queryAll('SELECT id FROM thoughts WHERE title=? AND text=?',[t.title||'',t.text||'']).length>0;
+        if(!exists){dbInsert({title:t.title||'Importado',text:t.text||'',category:t.category||'Outro',tags:t.tags||''});added++;}
+      });
+      renderLibrary();
+      toast(`${added} pensamento(s) importado(s) ✦`);
+    }catch(err){toast('Erro ao ler JSON!');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+function clearAll(){
+  if(!confirm('Apagar TODOS os pensamentos? Irreversível!'))return;
+  if(!confirm('Tem certeza? Faça um backup antes!'))return;
+  dbClear(); selectedId=null; renderLibrary(); toast('Banco limpo');
+}
+
+function saveDefaultSignature(){
+  const val = document.getElementById('defaultSignature').value;
+  localStorage.setItem('luminis_default_sig', val);
+}
+
+function loadDefaultSignatureField(){
+  const val = localStorage.getItem('luminis_default_sig') || '';
+  const el = document.getElementById('defaultSignature');
+  if (el) el.value = val;
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function today(){return new Date().toISOString().split('T')[0];}
+
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+(async()=>{
+  try{
+    await initSQLite();
+    document.getElementById('loader').style.display='none';
+    document.getElementById('appShell').style.display='';
+    renderLibrary();
+    loadDefaultSignatureField();
+    document.getElementById('dbPill').textContent='● SQLite';
+  }catch(err){
+    document.querySelector('.loader-text').textContent='Erro ao carregar SQLite: '+err.message;
+    console.error(err);
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════
+// SERVICE WORKER — PWA offline
+// ══════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      console.log('SW registrado:', reg.scope);
+
+      // Atualiza SW em segundo plano se houver nova versão
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            toast('Nova versão disponível! Reabra o app.');
+          }
+        });
+      });
+    } catch(e) {
+      console.warn('SW não registrado:', e);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROMPT DE INSTALAÇÃO (Android)
+// ══════════════════════════════════════════════════════════════
+let installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installPrompt = e;
+  // Mostra banner de instalação após 3s se não estiver instalado
+  setTimeout(() => {
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+      showInstallBanner();
+    }
+  }, 3000);
+});
+
+function showInstallBanner() {
+  if (document.getElementById('installBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.innerHTML = `
+    <div style="position:fixed;bottom:70px;left:50%;transform:translateX(-50%);
+      background:#1a1208;border:1px solid #c9a96e;border-radius:14px;
+      padding:14px 18px;z-index:500;display:flex;align-items:center;gap:12px;
+      box-shadow:0 8px 32px rgba(0,0,0,.6);max-width:320px;width:90%">
+      <img src="./icons/icon-192.png" style="width:40px;height:40px;border-radius:8px">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#c9a96e;margin-bottom:2px">Instalar LUMINIS</div>
+        <div style="font-size:12px;color:#7a6a4a">Adicionar à tela inicial como app</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="doInstall()" style="background:#c9a96e;color:#0f0d09;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Instalar</button>
+        <button onclick="document.getElementById('installBanner').remove()" style="background:none;border:none;color:#5a4a2a;font-size:12px;cursor:pointer">Agora não</button>
+      </div>
+    </div>`;
+  document.body.appendChild(banner);
+}
+
+async function doInstall() {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  const { outcome } = await installPrompt.userChoice;
+  if (outcome === 'accepted') {
+    toast('LUMINIS instalado! ✦');
+    document.getElementById('installBanner')?.remove();
+  }
+  installPrompt = null;
+}
+
+// Remove banner se já estiver instalado
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner')?.remove();
+  installPrompt = null;
+  toast('LUMINIS instalado com sucesso! ✦');
+});
+</script>
+</body>
+</html>

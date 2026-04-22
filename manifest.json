@@ -1,0 +1,55 @@
+{
+  "name": "LUMINIS — Pensamentos & Reflexões",
+  "short_name": "LUMINIS",
+  "description": "Cadastre, importe e crie imagens com seus pensamentos para postar nas redes sociais.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0d09",
+  "theme_color": "#0f0d09",
+  "lang": "pt-BR",
+  "categories": ["productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Novo Pensamento",
+      "short_name": "Novo",
+      "description": "Adicionar novo pensamento",
+      "url": "./index.html#add",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Criar Imagem",
+      "short_name": "Imagem",
+      "description": "Criar imagem para redes sociais",
+      "url": "./index.html#editor",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
