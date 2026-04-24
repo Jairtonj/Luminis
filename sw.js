@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════════════════
 // LUMINIS — Service Worker (PWA Offline)
 // ══════════════════════════════════════════════════════════════
-const CACHE_NAME = 'luminis-v1';
+const CACHE_NAME = 'luminis-v2';
 
 // Recursos locais para cachear na instalação
 const PRECACHE = [
