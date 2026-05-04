@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luminis-v3';
+const CACHE_NAME = 'luminis-v4';
 const PRECACHE = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 const CDN_CACHE = ['https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js','https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.wasm'];
 const FONT_CACHE = 'luminis-fonts-v1';
