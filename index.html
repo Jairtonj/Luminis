@@ -510,6 +510,13 @@ function ensureSchema() {
   // Migrate existing DBs that don't have new columns yet
   try { db.run(`ALTER TABLE thoughts ADD COLUMN author_type TEXT DEFAULT 'own'`); } catch(e) {}
   try { db.run(`ALTER TABLE thoughts ADD COLUMN ext_author TEXT DEFAULT ''`); } catch(e) {}
+  // Fix any NULL values left from previous versions
+  db.run(`UPDATE thoughts SET status='pending' WHERE status IS NULL OR status=''`);
+  db.run(`UPDATE thoughts SET author_type='own' WHERE author_type IS NULL OR author_type=''`);
+  db.run(`UPDATE thoughts SET ext_author='' WHERE ext_author IS NULL`);
+  db.run(`UPDATE thoughts SET posts='[]' WHERE posts IS NULL OR posts=''`);
+  db.run(`UPDATE thoughts SET tags='' WHERE tags IS NULL`);
+  persistDB();
 }
 
 function seedSamples() {
@@ -530,8 +537,15 @@ function dbGetAll(filters={}) {
   const params = [];
   if (filters.q) { sql += ' AND (LOWER(title) LIKE ? OR LOWER(text) LIKE ? OR LOWER(ext_author) LIKE ?)'; params.push(`%${filters.q}%`,`%${filters.q}%`,`%${filters.q}%`); }
   if (filters.cat) { sql += ' AND category = ?'; params.push(filters.cat); }
-  if (filters.status) { sql += ' AND status = ?'; params.push(filters.status); }
-  if (filters.author_type) { sql += ' AND author_type = ?'; params.push(filters.author_type); }
+  if (filters.status) {
+    if (filters.status === 'pending') {
+      sql += ' AND (status = ? OR status IS NULL OR status = \'\')';
+    } else {
+      sql += ' AND status = ?';
+    }
+    params.push(filters.status);
+  }
+  if (filters.author_type) { sql += ' AND (author_type = ? OR (? = \'own\' AND (author_type IS NULL OR author_type = \'\')))'; params.push(filters.author_type, filters.author_type); }
   sql += ' ORDER BY id DESC';
   return queryAll(sql, params);
 }
@@ -664,14 +678,14 @@ function renderLibrary() {
   const at = document.getElementById('filterAuthor').value;
   const all = dbGetAll({q,cat,status:st,author_type:at});
 
-  // Stats bar
-  const counts = queryAll('SELECT status, COUNT(*) as n FROM thoughts GROUP BY status');
+  // Stats bar — conta TODOS os registros, NULL de status conta como pending
+  const counts = queryAll('SELECT COALESCE(status,\'pending\') as status, COUNT(*) as n FROM thoughts GROUP BY COALESCE(status,\'pending\')');
   let nPend=0, nPost=0, nSched=0;
   counts.forEach(r=>{ if(r.status==='pending') nPend=r.n; else if(r.status==='posted') nPost=r.n; else if(r.status==='scheduled') nSched=r.n; });
   document.getElementById('statPending').textContent = `${nPend} Pendente${nPend!==1?'s':''}`;
   document.getElementById('statPosted').textContent  = `${nPost} Postado${nPost!==1?'s':''}`;
   document.getElementById('statSched').textContent   = `${nSched} Agendado${nSched!==1?'s':''}`;
-
+  document.getElementById('statPending').title = `Total no banco: ${nPend+nPost+nSched}`;
   const c=document.getElementById('libraryCards');
   if(!all.length){c.innerHTML=`<div class="empty"><div class="empty-icon">📖</div><p>Nenhum pensamento encontrado.</p></div>`;return;}
 
@@ -1212,6 +1226,64 @@ function toast(msg){
     console.error(err);
   }
 })();
+
+
+
+
+// ══════════════════════════════════════════════════════════════
+// SERVICE WORKER — PWA (jairtonj.github.io)
+// ══════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      console.log('SW registrado:', reg.scope);
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller)
+            toast('Nova versão disponível! Reabra o app.');
+        });
+      });
+    } catch(e) { console.warn('SW não registrado:', e); }
+  });
+}
+
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installPrompt = e;
+  setTimeout(() => {
+    if (!window.matchMedia('(display-mode: standalone)').matches) showInstallBanner();
+  }, 2000);
+});
+
+function showInstallBanner() {
+  if (document.getElementById('installBanner')) return;
+  const d = document.createElement('div'); d.id = 'installBanner';
+  d.innerHTML = `<div style="position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#1a1208;border:1px solid #c9a96e;border-radius:14px;padding:14px 18px;z-index:500;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);max-width:320px;width:90%">
+    <img src="/icons/icon-192.png" style="width:40px;height:40px;border-radius:8px">
+    <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#c9a96e;margin-bottom:2px">Instalar LUMINIS</div><div style="font-size:12px;color:#7a6a4a">Adicionar à tela inicial como app</div></div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button onclick="doInstall()" style="background:#c9a96e;color:#0f0d09;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Instalar</button>
+      <button onclick="document.getElementById('installBanner').remove()" style="background:none;border:none;color:#5a4a2a;font-size:12px;cursor:pointer">Agora não</button>
+    </div></div>`;
+  document.body.appendChild(d);
+}
+
+async function doInstall() {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  const { outcome } = await installPrompt.userChoice;
+  if (outcome === 'accepted') { toast('LUMINIS instalado! ✦'); document.getElementById('installBanner')?.remove(); }
+  installPrompt = null;
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner')?.remove();
+  installPrompt = null;
+  toast('LUMINIS instalado! ✦');
+});
+
 </script>
 </body>
 </html>
